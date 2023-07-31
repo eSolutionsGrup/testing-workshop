@@ -1,0 +1,68 @@
+version: '3.4'
+services:
+  postgres:
+    image: postgres:15.3-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=testingworkshop
+      - POSTGRES_USER=testingworkshop
+      - POSTGRES_PASSWORD=testingworkshop
+    networks:
+      custom_network:
+        ipv4_address: 10.1.0.100
+  testing-workshop:
+    image: testing-workshop:latest
+    restart: "no"
+    ports:
+      - "8080:8080"
+    networks:
+      custom_network:
+        ipv4_address: 10.1.0.101
+    environment:
+      LOGGING_LEVEL_ROOT: ERROR
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: ERROR
+      SPRING_DATASOURCE_URL: jdbc:postgresql://10.1.0.100:5432/testingworkshop
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "2G"
+        reservations:
+          cpus: "1"
+          memory: "2G"
+    logging:
+      driver: "none"
+    depends_on:
+      - postgres
+  jmeter:
+    image: justb4/jmeter
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.5"
+          memory: "3G"
+        reservations:
+          cpus: "2"
+          memory: "3G"
+    depends_on:
+      - testing-workshop
+    volumes:
+      - ./jmeter:/opt/apache-jmeter-5.5/bin/test_plans
+      - ~/jmeter_results/testing-workshop:/opt/apache-jmeter-5.5/bin/test_results
+    command: ["-n", "-t", "bin/test_plans/Performance_Test_Plan.jmx", "-l", "bin/test_results/result.jtl", "-e", "-o", "bin/test_results"]
+    extra_hosts:
+      - "localhost:10.1.0.101"
+    networks:
+      custom_network:
+        ipv4_address: 10.1.0.102
+    logging:
+      driver: "none"
+networks:
+  custom_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.0.0/24

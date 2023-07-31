@@ -24,7 +24,6 @@ public class CustomerService {
 
     public void saveCustomer(final CustomerModel customerModel) {
         Customer customerToBeSaved = Customer.builder()
-                .id(customerModel.getId())
                 .name(customerModel.getName())
                 .type(customerModel.getType())
                 .isActive(true)

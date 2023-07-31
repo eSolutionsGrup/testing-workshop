@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 public class Customer {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     private String name;
