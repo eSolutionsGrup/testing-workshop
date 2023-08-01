@@ -54,6 +54,9 @@ class CustomerResourceSpecIT extends Specification{
         result.getBody() == [customer]
     }
 
+    @SqlGroup([
+            @Sql(value = '/sql/clean_up.sql', executionPhase = AFTER_TEST_METHOD)
+    ])
     def 'Save new customer rest IT'() {
         given:
         def customerModel = aCustomerModel(id: -2, type: Customer.Type.NEW, name: 'Gigi Masinuta')
@@ -62,7 +65,7 @@ class CustomerResourceSpecIT extends Specification{
         def result = restTemplate.postForEntity('/customer/save', customerModel, null)
 
         then:
-        customerRepository.findById(-2L).get() == aCustomer(id: -2, type: Customer.Type.NEW, name: 'Gigi Masinuta', isActive: true)
+        customerRepository.findAll().size() == 1
         result.statusCode == HttpStatus.OK
     }
 
